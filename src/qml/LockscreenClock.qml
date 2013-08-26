@@ -55,7 +55,7 @@ Rectangle {
                 right: parent.right
             }
 
-            text: Qt.formatDateTime(wallClock.time, "dd/MM/yyyy")
+            text: Qt.formatDateTime(wallClock.time, "dddd, dd MMMM yyyy")
         }
     }
 }
