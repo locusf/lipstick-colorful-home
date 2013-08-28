@@ -105,8 +105,8 @@ Image {
             top: parent.top
             left: parent.left
             right: parent.right
+            verticalCenter: parent.verticalCenter
         }
-        verticalCenter: parent.verticalCenter
     }
 }
 
