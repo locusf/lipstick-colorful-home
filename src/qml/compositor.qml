@@ -68,13 +68,27 @@ Compositor {
         }
     }
 
+    Connections {
+        target: root
+        onActiveFocusItemChanged: {
+            // Search for the layer of the focus item
+            var focusedLayer = root.activeFocusItem
+            while (focusedLayer && focusedLayer.parent !== layersParent)
+                focusedLayer = focusedLayer.parent
+
+            // reparent the overlay to the found layer
+            overlayLayer.parent = focusedLayer ? focusedLayer : overlayLayer.parent
+        }
+    }
+
     Rectangle {
+        id: layersParent
         anchors.fill: parent
         color: "black"
 
         Item {
             id: homeLayer
-            z: root.homeActive ? 3 : 1
+            z: root.homeActive ? 4 : 1
             anchors.fill: parent
         }
 
@@ -84,7 +98,14 @@ Compositor {
 
             width: parent.width
             height: parent.height
-            visible: root.appActive 
+            visible: root.appActive
+        }
+
+        Item {
+            id: overlayLayer
+            z: 5
+
+            visible: root.appActive
         }
 
         Item {
@@ -187,30 +208,39 @@ Compositor {
         WindowWrapperBase { }
     }
 
+    Component {
+        id: alphaWrapper
+        WindowWrapperAlpha { }
+    }
+
     onWindowAdded: {
         if (debug) console.log("Compositor: Window added \"" + window.title + "\"")
 
         var isHomeWindow = window.isInProcess && root.homeWindow == null && window.title == "Home"
         var isNotificationWindow = window.category == "notification"
-        var isOverlayWindow = window.category == "overlay"
+        var isOverlayWindow =  window.category == "overlay"
 
         var parent = null
         if (isHomeWindow) {
             parent = homeLayer
         } else if (isNotificationWindow) {
             parent = notificationLayer
+        } else if (isOverlayWindow){
+            parent = overlayLayer
         } else {
             parent = appLayer
         }
 
-        var w = windowWrapper.createObject(parent, { window: window })
+        var w;
+        if (isOverlayWindow) w = alphaWrapper.createObject(parent, { window: window })
+        else w = windowWrapper.createObject(parent, { window: window })
+
         window.userData = w
- 
+
         if (isHomeWindow) {
             root.homeWindow = w
             setCurrentWindow(homeWindow)
-        } else if (isNotificationWindow) {
-        } else if (isOverlayWindow) {
+        } else if (isNotificationWindow || isOverlayWindow) {
         } else {
             setCurrentWindow(w)
         }
